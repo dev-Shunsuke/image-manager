@@ -23,7 +23,7 @@ export default function ImageFolder({ node }: Props) {
 
   return (
     <div>
-      <ListItemButton onClick={handleClick} sx={{ pl: (1 * node.depth),minWidth: '100%' }}>
+      <ListItemButton onClick={handleClick} sx={{ pl: (1+node.depth),minWidth: '100%' }}>
         <ListItemIcon>
           <Folder />
         </ListItemIcon>
@@ -34,9 +34,11 @@ export default function ImageFolder({ node }: Props) {
         <List component="div" disablePadding>
         {node.children.map((child) => (
             child.is_dir ? (
+              <div style={{paddingLeft:1}}>
                 <ImageFolder  node={child}  />
+                </div>
               ) : (
-                <ListItemButton sx={{ pl: (2.5 * node.depth),minWidth: '100%' }}>
+                <ListItemButton sx={{ pl: (2+node.depth),minWidth: '100%' }}>
                   <ListItemIcon>
                     <ImageIcon />
                   </ListItemIcon>
