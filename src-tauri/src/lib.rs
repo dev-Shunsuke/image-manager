@@ -7,7 +7,7 @@ const ROOT_PATH: &str = r"C:\Users\suesa\Downloads\beasters";
 
 #[tauri::command]
 fn get_file_contents() -> String {
-    let result = get_file_tree(ROOT_PATH, &["png", "jpg"]);
+    let result = get_file_tree(ROOT_PATH, &["png", "jpg", "jpeg"]);
     match result {
         Ok(tree) => {
             let json = serde_json::to_string(&tree).unwrap_or_else(|_| "".to_string());
@@ -23,7 +23,7 @@ fn get_file_contents() -> String {
 
 #[tauri::command]
 fn get_image_lists() -> String {
-    let result = get_image_list(ROOT_PATH, &["png", "jpg"]);
+    let result = get_image_list(ROOT_PATH, &["png", "jpg", "jpeg"]);
     match result {
         Ok(tree) => {
             let json = serde_json::to_string(&tree).unwrap_or_else(|_| "".to_string());

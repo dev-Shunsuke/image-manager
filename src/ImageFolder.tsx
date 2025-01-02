@@ -16,7 +16,7 @@ interface Props {
   }
 
 export default function ImageFolder({ node,loadFile }: Props) {
-  const [open, setOpen] = React.useState(true);
+  const [open, setOpen] = React.useState(false);
 
   const handleClick = () => {
     setOpen(!open);

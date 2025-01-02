@@ -17,11 +17,7 @@ pub struct ImageNode {
     pub path: String
 }
 
-pub fn get_file_tree(dir_path: &str, extensions: &[&str]) -> Result<FileNode, std::io::Error> {
-    get_file_tree_with_depth(dir_path, extensions, 0)
-}
-
-fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: i32) -> Result<FileNode, std::io::Error> {
+fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: i32) -> Result<Option<FileNode>, std::io::Error> {
     let path = Path::new(dir_path);
     let name = path
         .file_name()
@@ -34,7 +30,7 @@ fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: 
         path: dir_path.to_string(),
         is_dir: true,
         children: Vec::new(),
-        depth: current_depth,  // 現在の階層数を設定
+        depth: current_depth,
     };
 
     if path.is_dir() {
@@ -44,8 +40,12 @@ fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: 
             let path_str = path.to_string_lossy().to_string();
 
             if path.is_dir() {
-                let child_tree = get_file_tree_with_depth(&path_str, extensions, current_depth + 1)?;
-                node.children.push(child_tree);
+                if let Ok(Some(child_tree)) = get_file_tree_with_depth(&path_str, extensions, current_depth + 1) {
+                    // 子ディレクトリに有効なファイルが含まれている場合は追加
+                    if !child_tree.children.is_empty() || child_tree.children.iter().any(|child| !child.children.is_empty()) {
+                        node.children.push(child_tree);
+                    }
+                }
             } else {
                 if let Some(ext) = path.extension() {
                     let ext_str = ext.to_string_lossy().to_string();
@@ -59,7 +59,7 @@ fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: 
                             path: path_str,
                             is_dir: false,
                             children: Vec::new(),
-                            depth: current_depth + 1,  // 子要素の階層数を設定
+                            depth: current_depth + 1,
                         });
                     }
                 }
@@ -67,8 +67,24 @@ fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: 
         }
     }
 
-    Ok(node)
+    // 直接のファイルを持つか、有効なファイルを含む子ディレクトリがある場合はnodeを返す
+    if node.children.iter().any(|child| !child.children.is_empty() || !child.is_dir) {
+        Ok(Some(node))
+    } else {
+        Ok(None)
+    }
 }
+
+pub fn get_file_tree(dir_path: &str, extensions: &[&str]) -> Result<FileNode, std::io::Error> {
+    match get_file_tree_with_depth(dir_path, extensions, 0)? {
+        Some(node) => Ok(node),
+        None => Err(std::io::Error::new(
+            std::io::ErrorKind::NotFound,
+            "No files found matching the specified extensions"
+        ))
+    }
+}
+
 
 pub fn get_image_list(dir_path: &str, extensions: &[&str]) -> Result<Vec<ImageNode>, std::io::Error> {
     let mut image_list = Vec::new();
