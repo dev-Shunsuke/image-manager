@@ -3,12 +3,13 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Grid from '@mui/material/Grid2';
-import App from './App';
 import TabBase from './TabBase';  
 import ImageIcon from '@mui/icons-material/Image';
 import StarIcon from '@mui/icons-material/Star';
 import FolderIcon from '@mui/icons-material/Folder';
 import ImageList from './ImageList';
+import { readFile } from '@tauri-apps/plugin-fs';
+import { useEffect, useState } from 'react';
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: '#fff',
@@ -21,22 +22,39 @@ const Item = styled(Paper)(({ theme }) => ({
   }),
 }));
 
-const tabItems = [
-  {
-    icon: <ImageIcon />,
-    component: <ImageList />
-  },
-  {
-    icon: <StarIcon />,
-    component: <App />
-  },
-  {
-    icon: <FolderIcon />,
-    component: <App />
-  },
-];
+
 
 export default function BasicGrid() {
+
+  const [file, setFile] = useState("");
+
+  const loadFile = async (path: string) => {
+    try {
+      const fileContent = await readFile(path);
+      const fileSrc = URL.createObjectURL(
+        new Blob([fileContent.buffer], { type: 'image/png' })
+      );
+      setFile(fileSrc);
+    } catch (error) {
+      console.error("Error loading file:", error);
+    }
+  };
+
+  const tabItems = [
+    {
+      icon: <ImageIcon />,
+      component: <ImageList loadFile={loadFile} />
+    },
+    {
+      icon: <StarIcon />,
+      component: <ImageList loadFile={loadFile} />
+    }
+  ];
+
+  useEffect(() => {
+    loadFile("C:\\Users\\suesa\\OneDrive\\Desktop\\Work\\root_picfolder\\1\\1-1.jpg");
+  }, []);
+
   return (
     <Box sx={{ 
       flexGrow: 1,
@@ -49,7 +67,7 @@ export default function BasicGrid() {
           <Item><TabBase tabs={tabItems} /></Item>
         </Grid>
         <Grid size={10} sx={{ height: '100%' }}>
-          <Item>size=4</Item>
+          <Item><img src={file} /></Item>
         </Grid>
       </Grid>
     </Box>

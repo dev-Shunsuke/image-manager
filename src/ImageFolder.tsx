@@ -12,13 +12,20 @@ import ImageIcon from '@mui/icons-material/Image';
 
 interface Props {
     node: FileNode;
+    loadFile: (path: string) => Promise<void>;
   }
 
-export default function ImageFolder({ node }: Props) {
+export default function ImageFolder({ node,loadFile }: Props) {
   const [open, setOpen] = React.useState(true);
 
   const handleClick = () => {
     setOpen(!open);
+  };
+
+  const handleImageClick = (path: string) => {
+    loadFile(path).then(() => {
+      // Handle the file loading here
+    });
   };
 
   return (
@@ -35,10 +42,14 @@ export default function ImageFolder({ node }: Props) {
         {node.children.map((child) => (
             child.is_dir ? (
               <div style={{paddingLeft:1}}>
-                <ImageFolder  node={child}  />
+                <ImageFolder node={child} loadFile={loadFile}  />
                 </div>
               ) : (
-                <ListItemButton sx={{ pl: (2+node.depth),minWidth: '100%' }}>
+                <ListItemButton 
+                  key={child.path}
+                  sx={{ pl: (2+node.depth), minWidth: '100%' }} 
+                  onClick={() => handleImageClick(child.path)}
+                >
                   <ListItemIcon>
                     <ImageIcon />
                   </ListItemIcon>

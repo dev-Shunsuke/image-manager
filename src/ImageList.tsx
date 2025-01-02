@@ -5,12 +5,17 @@ import { useEffect } from 'react';
 import { FileNode } from './types';
 import ImageFolder from './ImageFolder';
 
-export default function NestedList() {
+
+interface ImageListProps {
+  loadFile: (path: string) => Promise<void>;
+}
+
+export default function NestedList({ loadFile }: ImageListProps) {
   const [fileListItmes, setFileListItems] = React.useState<JSX.Element>();
 
   const renderFileNode = (node: FileNode) => {
     return (
-      <ImageFolder  node={node}/>
+      <ImageFolder  node={node} loadFile={loadFile} />
     );
   };
 
