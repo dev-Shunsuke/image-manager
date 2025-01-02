@@ -27,6 +27,7 @@ const Item = styled(Paper)(({ theme }) => ({
 export default function BasicGrid() {
 
   const [file, setFile] = useState("");
+  const [realPath, setRealPath] = useState("");
 
   const loadFile = async (path: string) => {
     try {
@@ -35,6 +36,7 @@ export default function BasicGrid() {
         new Blob([fileContent.buffer], { type: 'image/png' })
       );
       setFile(fileSrc);
+      setRealPath(path);
     } catch (error) {
       console.error("Error loading file:", error);
     }
@@ -43,11 +45,11 @@ export default function BasicGrid() {
   const tabItems = [
     {
       icon: <ImageIcon />,
-      component: <ImageList loadFile={loadFile} />
+      component: <ImageList loadFile={loadFile} currentFile={realPath} />
     },
     {
       icon: <StarIcon />,
-      component: <ImageList loadFile={loadFile} />
+      component: <ImageList loadFile={loadFile} currentFile={realPath} />
     }
   ];
 

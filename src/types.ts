@@ -5,3 +5,7 @@ export interface FileNode {
     children: FileNode[];
     depth: number;
   }
+  export interface ImageFile {
+    name: string;
+    path: string;
+  }

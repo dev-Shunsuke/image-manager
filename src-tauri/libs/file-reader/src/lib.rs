@@ -11,6 +11,12 @@ pub struct FileNode {
     pub depth: i32,  // 階層数を表すフィールドを追加
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct ImageNode {
+    pub name: String,
+    pub path: String
+}
+
 pub fn get_file_tree(dir_path: &str, extensions: &[&str]) -> Result<FileNode, std::io::Error> {
     get_file_tree_with_depth(dir_path, extensions, 0)
 }
@@ -62,6 +68,44 @@ fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: 
     }
 
     Ok(node)
+}
+
+pub fn get_image_list(dir_path: &str, extensions: &[&str]) -> Result<Vec<ImageNode>, std::io::Error> {
+    let mut image_list = Vec::new();
+    collect_images(dir_path, extensions, &mut image_list)?;
+    Ok(image_list)
+}
+
+fn collect_images(dir_path: &str, extensions: &[&str], image_list: &mut Vec<ImageNode>) -> Result<(), std::io::Error> {
+    let path = Path::new(dir_path);
+
+    if path.is_dir() {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            let path_str = path.to_string_lossy().to_string();
+
+            if path.is_dir() {
+                collect_images(&path_str, extensions, image_list)?;
+            } else {
+                if let Some(ext) = path.extension() {
+                    let ext_str = ext.to_string_lossy().to_string();
+                    if extensions.is_empty() || extensions.iter().any(|&e| e == ext_str) {
+                        image_list.push(ImageNode {
+                            name: path
+                                .file_name()
+                                .unwrap_or_default()
+                                .to_string_lossy()
+                                .to_string(),
+                            path: path_str,
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
