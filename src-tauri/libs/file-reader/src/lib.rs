@@ -17,6 +17,66 @@ pub struct ImageNode {
     pub path: String
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct FolderNode {
+    pub name: String,
+    pub path: String,
+    pub children: Vec<FileNode>,
+    pub depth: i32,  // 階層数を表すフィールドを追加
+}
+
+pub fn get_folder_tree(dir_path: &str, extensions: &[&str]) -> Result<Option<FolderNode>, std::io::Error> {
+    let path = Path::new(dir_path);
+    let name = path
+        .file_name()
+        .unwrap_or_default()
+        .to_string_lossy()
+        .to_string();
+
+    let mut node = FolderNode {
+        name,
+        path: dir_path.to_string(),
+        children: Vec::new(),
+        depth: 0,
+    };
+
+    let mut has_target_files = false;
+
+    if path.is_dir() {
+        for entry in fs::read_dir(path)? {
+            let entry = entry?;
+            let path = entry.path();
+            
+            if path.is_dir() {
+                let path_str = path.to_string_lossy().to_string();
+                if let Ok(Some(child_tree)) = get_folder_tree(&path_str, extensions) {
+                    has_target_files = true;
+                    node.children.push(FileNode {
+                        name: child_tree.name,
+                        path: child_tree.path,
+                        is_dir: true,
+                        children: child_tree.children,
+                        depth: child_tree.depth + 1,
+                    });
+                }
+            } else {
+                if let Some(ext) = path.extension() {
+                    let ext_str = ext.to_string_lossy().to_string();
+                    if extensions.iter().any(|&e| e == ext_str) {
+                        has_target_files = true;
+                    }
+                }
+            }
+        }
+    }
+
+    if has_target_files {
+        Ok(Some(node))
+    } else {
+        Ok(None)
+    }
+}
+
 fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: i32) -> Result<Option<FileNode>, std::io::Error> {
     let path = Path::new(dir_path);
     let name = path

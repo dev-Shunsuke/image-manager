@@ -8,30 +8,47 @@ import ImageFolder from './ImageFolder';
 interface ImageListProps {
   loadFile: (path: string) => Promise<void>;
   currentFile: string;
+  foucusedPath: string;
+  setFoucusedPath: (path: string) => void;
 }
 
-export default function NestedList({ loadFile,currentFile }: ImageListProps) {
+export default function NestedList({ loadFile,currentFile,foucusedPath,setFoucusedPath }: ImageListProps) {
   const [fileListItmes, setFileListItems] = React.useState<JSX.Element>();
   const [imageFiles, setImageFiles] = React.useState<Array<ImageFile>>([]);
 
   const renderFileNode = (node: FileNode) => {
     return (
-      <ImageFolder node={node} loadFile={loadFile} />
+      <ImageFolder node={node} loadFile={loadFile} foucusedPath={foucusedPath} setFoucusedPath={setFoucusedPath}/>
     );
   };
 
-
   async function readFiles() {
-    let fileNodesString: string = (await invoke("get_file_contents", {}));
+    console.log("onreadFiles"+foucusedPath);
+    let fileNodesString: string = (await invoke("get_file_contents", {path:foucusedPath}));
     const fileNodes: FileNode = JSON.parse(fileNodesString);
     setFileListItems(renderFileNode(fileNodes));
-    let imageFileNodeString: string = (await invoke("get_image_lists", {}));
+    let imageFileNodeString: string = (await invoke("get_image_lists", {path:foucusedPath}));
     const imageList: Array<ImageFile> = JSON.parse(imageFileNodeString);
     setImageFiles(imageList);
   }
 
+  useEffect(() => {
+    console.log("ImageList received new currentFile:", currentFile);
+  }, [currentFile]);
+
+
   async function handleKeyRight() {
-    //imageFilesから、pathと同じpathを持つものを探し、その次の要素を取得
+    
+    console.log("handleKeyRight called");
+  console.log("Current state:", { currentFile, imageFiles });
+
+    // If currentFile is empty, start from the first image
+    if (!currentFile && imageFiles.length > 0) {
+      const firstPath = imageFiles[0].path;
+      await loadFile(firstPath);
+      return;
+    }
+  
     const index = imageFiles.findIndex(file => file.path === currentFile);
     if (index === -1) {
       return;
@@ -45,7 +62,6 @@ export default function NestedList({ loadFile,currentFile }: ImageListProps) {
   }
 
   async function handleKeyLeft() {
-    //imageFilesから、pathと同じpathを持つものを探し、その前の要素を取得
     const index = imageFiles.findIndex(file => file.path === currentFile);
     if (index === -1) {
       return;
@@ -59,7 +75,6 @@ export default function NestedList({ loadFile,currentFile }: ImageListProps) {
     loadFile(previousPath);
   }
 
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'ArrowRight') {
@@ -69,18 +84,19 @@ export default function NestedList({ loadFile,currentFile }: ImageListProps) {
         handleKeyLeft();
       }
     };
-
-    // イベントリスナーを追加
     window.addEventListener('keydown', handleKeyDown);
-
-    // クリーンアップ関数
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentFile, imageFiles]); // 依存配列に必要な値を追加
+    
+  }, [currentFile, imageFiles, loadFile]); 
+
   useEffect(() => {
+    console.log(foucusedPath);
+    console.log("ImageList useEffect");
+    setFileListItems(undefined); 
     readFiles();
-  }, []);
+  }, [foucusedPath]);
 
   return (
     <List
@@ -91,7 +107,7 @@ export default function NestedList({ loadFile,currentFile }: ImageListProps) {
         padding: 0,
         bgcolor: 'background.paper',
         overflow: 'auto', // スクロール可能にする
-        maxHeight: '100vh', // ビューポートの高さを最大値に
+        maxHeight: '90vh', // ビューポートの高さを最大値に
       }}
       component="nav"
       aria-labelledby="nested-list-subheader"
