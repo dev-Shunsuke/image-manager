@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::Path;
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct FileNode {
@@ -8,13 +8,13 @@ pub struct FileNode {
     pub path: String,
     pub is_dir: bool,
     pub children: Vec<FileNode>,
-    pub depth: i32,  // 階層数を表すフィールドを追加
+    pub depth: i32, // 階層数を表すフィールドを追加
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ImageNode {
     pub name: String,
-    pub path: String
+    pub path: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -22,10 +22,13 @@ pub struct FolderNode {
     pub name: String,
     pub path: String,
     pub children: Vec<FileNode>,
-    pub depth: i32,  // 階層数を表すフィールドを追加
+    pub depth: i32, // 階層数を表すフィールドを追加
 }
 
-pub fn get_folder_tree(dir_path: &str, extensions: &[&str]) -> Result<Option<FolderNode>, std::io::Error> {
+pub fn get_folder_tree(
+    dir_path: &str,
+    extensions: &[&str],
+) -> Result<Option<FolderNode>, std::io::Error> {
     let path = Path::new(dir_path);
     let name = path
         .file_name()
@@ -46,7 +49,7 @@ pub fn get_folder_tree(dir_path: &str, extensions: &[&str]) -> Result<Option<Fol
         for entry in fs::read_dir(path)? {
             let entry = entry?;
             let path = entry.path();
-            
+
             if path.is_dir() {
                 let path_str = path.to_string_lossy().to_string();
                 if let Ok(Some(child_tree)) = get_folder_tree(&path_str, extensions) {
@@ -77,7 +80,11 @@ pub fn get_folder_tree(dir_path: &str, extensions: &[&str]) -> Result<Option<Fol
     }
 }
 
-fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: i32) -> Result<Option<FileNode>, std::io::Error> {
+fn get_file_tree_with_depth(
+    dir_path: &str,
+    extensions: &[&str],
+    current_depth: i32,
+) -> Result<Option<FileNode>, std::io::Error> {
     let path = Path::new(dir_path);
     let name = path
         .file_name()
@@ -100,9 +107,16 @@ fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: 
             let path_str = path.to_string_lossy().to_string();
 
             if path.is_dir() {
-                if let Ok(Some(child_tree)) = get_file_tree_with_depth(&path_str, extensions, current_depth + 1) {
+                if let Ok(Some(child_tree)) =
+                    get_file_tree_with_depth(&path_str, extensions, current_depth + 1)
+                {
                     // 子ディレクトリに有効なファイルが含まれている場合は追加
-                    if !child_tree.children.is_empty() || child_tree.children.iter().any(|child| !child.children.is_empty()) {
+                    if !child_tree.children.is_empty()
+                        || child_tree
+                            .children
+                            .iter()
+                            .any(|child| !child.children.is_empty())
+                    {
                         node.children.push(child_tree);
                     }
                 }
@@ -128,7 +142,11 @@ fn get_file_tree_with_depth(dir_path: &str, extensions: &[&str], current_depth: 
     }
 
     // 直接のファイルを持つか、有効なファイルを含む子ディレクトリがある場合はnodeを返す
-    if node.children.iter().any(|child| !child.children.is_empty() || !child.is_dir) {
+    if node
+        .children
+        .iter()
+        .any(|child| !child.children.is_empty() || !child.is_dir)
+    {
         Ok(Some(node))
     } else {
         Ok(None)
@@ -140,19 +158,25 @@ pub fn get_file_tree(dir_path: &str, extensions: &[&str]) -> Result<FileNode, st
         Some(node) => Ok(node),
         None => Err(std::io::Error::new(
             std::io::ErrorKind::NotFound,
-            "No files found matching the specified extensions"
-        ))
+            "No files found matching the specified extensions",
+        )),
     }
 }
 
-
-pub fn get_image_list(dir_path: &str, extensions: &[&str]) -> Result<Vec<ImageNode>, std::io::Error> {
+pub fn get_image_list(
+    dir_path: &str,
+    extensions: &[&str],
+) -> Result<Vec<ImageNode>, std::io::Error> {
     let mut image_list = Vec::new();
     collect_images(dir_path, extensions, &mut image_list)?;
     Ok(image_list)
 }
 
-fn collect_images(dir_path: &str, extensions: &[&str], image_list: &mut Vec<ImageNode>) -> Result<(), std::io::Error> {
+fn collect_images(
+    dir_path: &str,
+    extensions: &[&str],
+    image_list: &mut Vec<ImageNode>,
+) -> Result<(), std::io::Error> {
     let path = Path::new(dir_path);
 
     if path.is_dir() {
@@ -189,7 +213,7 @@ mod tests {
     use super::*;
     #[test]
     fn test1() {
-        let tree = get_file_tree("C:\\Users\\suesa\\Downloads\\comic",&["png","jpg"]).unwrap();
+        let tree = get_file_tree("C:\\Users\\suesa\\Downloads\\comic", &["png", "jpg"]).unwrap();
         //treeの中身を再帰的に確認する
         content_check(&tree);
     }
@@ -200,8 +224,7 @@ mod tests {
                 content_check(child);
             }
         } else {
-            println!("{}\t{}\t{}", tree.name,tree.path,tree.is_dir);
+            println!("{}\t{}\t{}", tree.name, tree.path, tree.is_dir);
         }
     }
-
 }

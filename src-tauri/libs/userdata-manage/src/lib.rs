@@ -1,11 +1,11 @@
-use rusqlite::{Connection, Result,  params};
+use rusqlite::{params, Connection, Result};
 use std::path::Path;
 
 pub fn init_database(db_path: &str) -> Result<()> {
     // データベースが存在しない場合のみ新規作成
     if !Path::new(db_path).exists() {
         let conn = Connection::open(db_path)?;
-        
+
         // カテゴリテーブルの作成
         conn.execute(
             "CREATE TABLE IF NOT EXISTS categories (
@@ -47,19 +47,20 @@ pub fn insert_category(db_path: &str, name: &str, description: Option<&str>) -> 
 // カテゴリの取得
 pub fn get_categories(db_path: &str) -> Result<Vec<Category>> {
     let conn = Connection::open(db_path)?;
-    let mut stmt = conn.prepare(
-        "SELECT id, name, description, created_at, updated_at FROM categories"
-    )?;
-    
-    let categories = stmt.query_map([], |row| {
-        Ok(Category {
-            id: row.get(0)?,
-            name: row.get(1)?,
-            description: row.get(2)?,
-            created_at: row.get(3)?,
-            updated_at: row.get(4)?,
-        })
-    })?.collect::<Result<Vec<_>>>()?;
+    let mut stmt =
+        conn.prepare("SELECT id, name, description, created_at, updated_at FROM categories")?;
+
+    let categories = stmt
+        .query_map([], |row| {
+            Ok(Category {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                description: row.get(2)?,
+                created_at: row.get(3)?,
+                updated_at: row.get(4)?,
+            })
+        })?
+        .collect::<Result<Vec<_>>>()?;
 
     Ok(categories)
 }
@@ -67,10 +68,7 @@ pub fn get_categories(db_path: &str) -> Result<Vec<Category>> {
 // カテゴリの削除
 pub fn delete_category(db_path: &str, category_id: i64) -> Result<()> {
     let conn = Connection::open(db_path)?;
-    conn.execute(
-        "DELETE FROM categories WHERE id = ?1",
-        params![category_id],
-    )?;
+    conn.execute("DELETE FROM categories WHERE id = ?1", params![category_id])?;
     Ok(())
 }
 
@@ -91,18 +89,20 @@ pub fn get_file_categories(db_path: &str, file_id: i64) -> Result<Vec<Category>>
         "SELECT c.id, c.name, c.description, c.created_at, c.updated_at 
          FROM categories c
          INNER JOIN file_categories fc ON c.id = fc.category_id
-         WHERE fc.file_id = ?1"
+         WHERE fc.file_id = ?1",
     )?;
-    
-    let categories = stmt.query_map(params![file_id], |row| {
-        Ok(Category {
-            id: row.get(0)?,
-            name: row.get(1)?,
-            description: row.get(2)?,
-            created_at: row.get(3)?,
-            updated_at: row.get(4)?,
-        })
-    })?.collect::<Result<Vec<_>>>()?;
+
+    let categories = stmt
+        .query_map(params![file_id], |row| {
+            Ok(Category {
+                id: row.get(0)?,
+                name: row.get(1)?,
+                description: row.get(2)?,
+                created_at: row.get(3)?,
+                updated_at: row.get(4)?,
+            })
+        })?
+        .collect::<Result<Vec<_>>>()?;
 
     Ok(categories)
 }

@@ -1,7 +1,7 @@
-import * as React from 'react';
-import Tabs from '@mui/material/Tabs';
-import Tab from '@mui/material/Tab';
-import Box from '@mui/material/Box';
+import * as React from "react";
+import Tabs from "@mui/material/Tabs";
+import Tab from "@mui/material/Tab";
+import Box from "@mui/material/Box";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -37,7 +37,7 @@ function CustomTabPanel(props: TabPanelProps) {
 function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,
-    'aria-controls': `simple-tabpanel-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
   };
 }
 
@@ -49,24 +49,26 @@ export default function BasicTabs({ tabs }: BasicTabsProps) {
   };
 
   return (
-    <Box sx={{ width: '100%', height: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+    <Box sx={{ width: "100%", height: "100%" }}>
+      <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
         <Tabs value={value} onChange={handleChange}>
           {tabs.map((tab, index) => (
-            <Tab 
-              key={index} 
+            <Tab
+              key={index}
               icon={
-                <Box sx={{                   
-                    width: 'auto',
-                    height: 'auto'
-                }}>
+                <Box
+                  sx={{
+                    width: "auto",
+                    height: "auto",
+                  }}
+                >
                   {tab.icon as React.ReactElement}
                 </Box>
               }
-              {...a11yProps(index)} 
-              sx={{ 
-                minWidth: '5px',
-                width: 'auto'
+              {...a11yProps(index)}
+              sx={{
+                minWidth: "5px",
+                width: "auto",
               }}
             />
           ))}
